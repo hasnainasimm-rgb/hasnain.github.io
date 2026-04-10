@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hasnain · Integration Engineer</title>
+  <meta name="description" content="APIs, integrations, and the systems in between. Real-world lessons from building and debugging enterprise systems." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0d; --bg2: #111; --bg3: #161616; --bg4: #1e1e1e; --bg5: #252525;
+      --txt: #f0f0f0; --txt2: #9a9a9a; --txt3: #555;
+      --acc: #3b82f6; --acc2: #2563eb;
+      --bdr: #1f1f1f; --bdr2: #2a2a2a; --bdr3: #333;
+      --radius: 10px; --font: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--txt); font-family: var(--font); font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    a { color: var(--acc); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(13,13,13,.92); backdrop-filter: blur(8px); border-bottom: 0.5px solid var(--bdr2); }
+    nav .container { display: flex; align-items: center; justify-content: space-between; padding-top: 18px; padding-bottom: 18px; }
+    .logo { font-size: 15px; font-weight: 600; color: var(--txt); letter-spacing: -.2px; }
+    .logo span { color: var(--acc); }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 13px; color: var(--txt2); transition: color .15s; }
+    .nav-links a:hover { color: var(--txt); text-decoration: none; }
+
+    /* HERO */
+    .hero { padding: 96px 0 80px; border-bottom: 0.5px solid var(--bdr); }
+    .badge { display: inline-flex; align-items: center; gap: 7px; background: var(--bg3); border: 0.5px solid var(--bdr3); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--txt2); margin-bottom: 32px; letter-spacing: .3px; }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--acc); animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    h1 { font-size: clamp(30px, 5vw, 50px); font-weight: 500; letter-spacing: -1px; line-height: 1.13; margin-bottom: 22px; }
+    h1 em { color: var(--acc); font-style: normal; }
+    .hero-sub { font-size: 17px; color: var(--txt2); max-width: 500px; margin-bottom: 10px; }
+    .hero-note { font-size: 13.5px; color: var(--txt3); max-width: 460px; margin-bottom: 44px; }
+    .cta-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .18s; border: 0.5px solid; }
+    .btn-solid { background: var(--acc); color: #fff; border-color: var(--acc); }
+    .btn-solid:hover { background: var(--acc2); border-color: var(--acc2); text-decoration: none; }
+    .btn-outline { background: transparent; color: var(--txt2); border-color: var(--bdr3); }
+    .btn-outline:hover { background: var(--bg3); color: var(--txt); border-color: var(--bdr); text-decoration: none; }
+
+    /* SECTIONS */
+    section { padding: 72px 0; border-bottom: 0.5px solid var(--bdr); }
+    section:last-of-type { border-bottom: none; }
+    .section-tag { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--txt3); margin-bottom: 24px; }
+    h2 { font-size: 22px; font-weight: 500; letter-spacing: -.4px; margin-bottom: 16px; }
+
+    /* WHAT */
+    .what-block { background: var(--bg3); border: 0.5px solid var(--bdr2); border-left: 2px solid var(--acc); border-radius: var(--radius); padding: 28px 32px; }
+    .what-block p { font-size: 17px; color: var(--txt2); line-height: 1.85; }
+
+    /* TOPICS */
+    .topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .topic-card { background: var(--bg2); border: 0.5px solid var(--bdr2); border-radius: var(--radius); padding: 20px; transition: border-color .2s, background .2s; }
+    .topic-card:hover { border-color: var(--acc); background: var(--bg3); }
+    .t-icon { font-size: 18px; margin-bottom: 12px; display: block; }
+    .t-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .t-sub { font-size: 12px; color: var(--txt3); }
+
+    /* POSTS */
+    .posts-list { border: 0.5px solid var(--bdr2); border-radius: var(--radius); overflow: hidden; }
+    .post-item { display: flex; align-items: flex-start; gap: 20px; padding: 24px; background: var(--bg2); border-bottom: 0.5px solid var(--bdr); transition: background .18s; text-decoration: none; }
+    .post-item:last-child { border-bottom: none; }
+    .post-item:hover { background: var(--bg3); }
+    .post-num { font-size: 11px; color: var(--txt3); min-width: 24px; padding-top: 2px; font-variant-numeric: tabular-nums; }
+    .post-content { flex: 1; }
+    .post-label { display: inline-block; background: var(--bg5); border: 0.5px solid var(--bdr3); border-radius: 4px; padding: 2px 8px; font-size: 11px; color: var(--acc); margin-bottom: 8px; }
+    .post-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 5px; line-height: 1.45; }
+    .post-desc { font-size: 13px; color: var(--txt3); line-height: 1.6; }
+    .post-arrow { color: var(--txt3); font-size: 17px; align-self: center; transition: transform .2s, color .2s; }
+    .post-item:hover .post-arrow { transform: translateX(3px); color: var(--acc); }
+
+    /* ABOUT */
+    .about-card { background: var(--bg2); border: 0.5px solid var(--bdr2); border-radius: var(--radius); padding: 32px; display: flex; gap: 24px; align-items: flex-start; }
+    .avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--bg4); border: 0.5px solid var(--bdr3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: var(--acc); flex-shrink: 0; }
+    .about-text h3 { font-size: 17px; font-weight: 500; margin-bottom: 8px; }
+    .about-text p { font-size: 14px; color: var(--txt2); line-height: 1.8; }
+
+    /* FOOTER */
+    footer { padding: 32px 0; border-top: 0.5px solid var(--bdr); }
+    footer .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-left { font-size: 12px; color: var(--txt3); }
+    .footer-left em { font-style: italic; color: var(--txt3); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 12px; color: var(--txt3); transition: color .18s; }
+    .footer-links a:hover { color: var(--acc); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .hero { padding: 64px 0 52px; }
+      .about-card { flex-direction: column; }
+      .cta-group { flex-direction: column; max-width: 220px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="logo">hasnain<span>.</span>dev</div>
+    <ul class="nav-links">
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="https://github.com/yourusername">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Integration Engineer · IBM ACE · Enterprise Systems
+      </div>
+      <h1>Hasnain Builds Things<br><em>(and Occasionally Breaks Them)</em></h1>
+      <p class="hero-sub">APIs, integrations, and the systems in between.</p>
+      <p class="hero-note">Real-world lessons from building and debugging enterprise systems.</p>
+      <div class="cta-group">
+        <a href="/blog" class="btn btn-solid">📘 Read Blog</a>
+        <a href="/about" class="btn btn-outline">💼 About Me</a>
+        <a href="https://github.com/yourusername" class="btn btn-outline">🔗 GitHub</a>
+        <a href="https://linkedin.com/in/yourusername" class="btn btn-outline">💼 LinkedIn</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT IS THIS -->
+  <section>
+    <div class="container">
+      <p class="section-tag">What this is</p>
+      <div class="what-block">
+        <p>This is where I document what I learn building real systems. Not theory. Not perfect architectures. Just what works, what breaks, and why.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPICS -->
+  <section>
+    <div class="container">
+      <p class="section-tag">Topics &amp; expertise</p>
+      <div class="topics-grid">
+        <div class="topic-card">
+          <span class="t-icon">⚡</span>
+          <div class="t-name">API Integration</div>
+          <div class="t-sub">IBM ACE, REST, SOAP patterns</div>
+        </div>
+        <div class="topic-card">
+          <span class="t-icon">🔁</span>
+          <div class="t-name">Event-Driven Systems</div>
+          <div class="t-sub">MQ, async flows, message choreography</div>
+        </div>
+        <div class="topic-card">
+          <span class="t-icon">🧩</span>
+          <div class="t-name">Middleware & System Design</div>
+          <div class="t-sub">Flows that survive production</div>
+        </div>
+        <div class="topic-card">
+          <span class="t-icon">🔍</span>
+          <div class="t-name">Debugging Production</div>
+          <div class="t-sub">Real incidents, real root causes</div>
+        </div>
+        <div class="topic-card">
+          <span class="t-icon">📐</span>
+          <div class="t-name">Patterns & Anti-Patterns</div>
+          <div class="t-sub">What to build — and what to avoid</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSTS -->
+  <section>
+    <div class="container">
+      <p class="section-tag">Featured posts</p>
+      <div class="posts-list">
+        <a href="/posts/broke-production" class="post-item">
+          <span class="post-num">01</span>
+          <div class="post-content">
+            <span class="post-label">incident report</span>
+            <div class="post-title">I Broke Production — Here's What It Taught Me</div>
+            <div class="post-desc">A post-mortem on a real outage, what triggered it, and the three things I'll never skip again.</div>
+          </div>
+          <span class="post-arrow">→</span>
+        </a>
+        <a href="/posts/ibm-ace-things" class="post-item">
+          <span class="post-num">02</span>
+          <div class="post-content">
+            <span class="post-label">ibm ace</span>
+            <div class="post-title">IBM ACE: Things That Aren't Obvious Until They Hurt</div>
+            <div class="post-desc">Hard-won lessons from ACE that aren't in the docs — message flows, ESQL quirks, and deployment traps.</div>
+          </div>
+          <span class="post-arrow">→</span>
+        </a>
+        <a href="/posts/why-integrations-fail" class="post-item">
+          <span class="post-num">03</span>
+          <div class="post-content">
+            <span class="post-label">integration</span>
+            <div class="post-title">Why Most Integrations Fail in Real Life</div>
+            <div class="post-desc">The gap between a well-designed integration on paper and one that survives contact with reality.</div>
+          </div>
+          <span class="post-arrow">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="container">
+      <p class="section-tag">About</p>
+      <div class="about-card">
+        <div class="avatar">H</div>
+        <div class="about-text">
+          <h3>Hasnain</h3>
+          <p>I'm an Integration Engineer working with IBM ACE and enterprise systems. I build APIs, design flows, and fix things when they go wrong. This blog is my way of thinking out loud — part documentation, part catharsis.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-left">Built by Hasnain · <em>Powered by controlled chaos</em></div>
+    <div class="footer-links">
+      <a href="https://github.com/yourusername">GitHub</a>
+      <a href="https://linkedin.com/in/yourusername">LinkedIn</a>
+      <a href="mailto:your@email.com">Email</a>
+      <span style="font-size:12px;color:var(--txt3)">© 2025 Hasnain</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
