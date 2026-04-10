@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hasnain Asim · Integration Engineer</title>
+<meta name="description" content="APIs, integrations, and the systems in between. Real-world lessons from building enterprise systems."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--bg2:#0e0e0e;--bg3:#141414;--bg4:#1a1a1a;--bg5:#222;--bg6:#2c2c2c;
+  --txt:#f0f0f0;--txt2:#888;--txt3:#444;--txt4:#ccc;
+  --acc:#e8ff47;--acc2:#c8de20;
+  --red:#ef4444;--amber:#f59e0b;--green:#22c55e;
+  --bdr:rgba(255,255,255,.06);--bdr2:rgba(255,255,255,.11);--bdr3:rgba(255,255,255,.16);
+  --r:8px;--r2:12px;
+  --mono:'DM Mono',monospace;
+  --serif:'Instrument Serif',serif;
+  --sans:'Inter',system-ui,sans-serif;
+}
+html{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
+a{color:var(--acc);text-decoration:none}
+input,textarea,select,button{font-family:var(--sans)}
+.hide{display:none!important}
+
+/* NAV */
+#nav{position:sticky;top:0;z-index:1000;background:rgba(8,8,8,.93);backdrop-filter:blur(16px);border-bottom:0.5px solid var(--bdr2);height:56px;display:flex;align-items:center;padding:0 32px;justify-content:space-between}
+.nav-logo{font-family:var(--serif);font-size:20px;font-style:italic;cursor:pointer;color:var(--txt)}
+.nav-logo span{color:var(--acc)}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-link{font-size:13px;color:var(--txt2);cursor:pointer;transition:color .15s;background:none;border:none;padding:0}
+.nav-link:hover,.nav-link.active{color:var(--txt)}
+#admin-btn{font-size:11px;font-family:var(--mono);padding:5px 11px;border-radius:6px;cursor:pointer;transition:all .2s;background:transparent}
+#admin-btn.off{color:var(--txt3);border:0.5px solid var(--bdr2)}
+#admin-btn.on{color:#000;background:var(--acc);border:0.5px solid var(--acc)}
+
+/* PAGES */
+.page{display:none;animation:fadein .2s ease}
+.page.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.wrap-sm{max-width:720px;margin:0 auto;padding:0 24px}
+.sec{padding:80px 0 72px;border-bottom:0.5px solid var(--bdr)}
+.sec:last-child{border-bottom:none}
+.sec-label{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--txt3);margin-bottom:20px;display:block}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:0.5px solid;background:transparent}
+.btn-acc{background:var(--acc);color:#000;border-color:var(--acc);font-weight:600}.btn-acc:hover{background:var(--acc2);border-color:var(--acc2)}
+.btn-ghost{color:var(--txt2);border-color:var(--bdr2)}.btn-ghost:hover{color:var(--txt);background:var(--bg3);border-color:var(--bdr3)}
+.btn-danger{color:var(--red);border-color:var(--red);font-size:11px;padding:4px 10px}.btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-sm{font-size:12px;padding:6px 14px}
+
+/* FORMS */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.field label{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt3)}
+input[type=text],input[type=email],input[type=number],input[type=date],input[type=password],textarea,select{
+  background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:var(--r);padding:10px 14px;font-size:14px;color:var(--txt);width:100%;outline:none;transition:border-color .15s
+}
+input:focus,textarea:focus,select:focus{border-color:var(--acc)}
+textarea{resize:vertical;line-height:1.7}
+
+/* CARDS */
+.card{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--r2);padding:20px 24px}
+.card-hover{transition:border-color .18s,background .18s;cursor:pointer}
+.card-hover:hover{border-color:var(--acc);background:var(--bg3)}
+
+/* TAG */
+.tag{display:inline-block;background:var(--bg4);border:0.5px solid var(--bdr2);border-radius:4px;padding:2px 9px;font-size:11px;color:var(--acc);letter-spacing:.3px}
+
+/* TOAST */
+#toast{position:fixed;bottom:28px;right:28px;background:var(--bg4);border:0.5px solid var(--bdr3);border-radius:var(--r2);padding:12px 20px;font-size:13px;color:var(--txt);z-index:9999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+#toast.show{opacity:1;transform:none}
+
+/* MODAL OVERLAY */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{background:var(--bg3);border:0.5px solid var(--bdr3);border-radius:var(--r2);padding:32px;width:100%;max-width:400px}
+
+/* PROSE */
+.prose p{color:#ccc;margin-bottom:18px;line-height:1.85;font-size:15px}
+.prose strong{color:#efefef;font-weight:500}
+.prose em{color:#aaa;font-style:italic}
+.prose code{font-family:var(--mono);font-size:12px;background:var(--bg4);padding:2px 6px;border-radius:4px;color:var(--acc)}
+.prose h3{font-size:16px;font-weight:500;margin:28px 0 10px;color:var(--txt)}
+.prose ol,.prose ul{color:#ccc;padding-left:22px;margin-bottom:18px}
+.prose li{margin-bottom:8px;line-height:1.8}
+.prose blockquote{border-left:2px solid var(--acc);padding:14px 18px;background:var(--bg3);border-radius:0 var(--r) var(--r) 0;margin:22px 0}
+.prose blockquote p{color:var(--txt2);margin:0;font-style:italic}
+.prose hr{border:none;border-top:0.5px solid var(--bdr);margin:32px 0}
+
+/* HERO */
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--txt2);margin-bottom:32px;letter-spacing:.3px}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* POST LIST */
+.post-row{display:flex;align-items:flex-start;gap:20px;padding:22px 24px;background:var(--bg2);border-bottom:0.5px solid var(--bdr);cursor:pointer;transition:background .15s}
+.post-row:last-child{border-bottom:none}
+.post-row:hover{background:var(--bg3)}
+.post-row:hover .p-arrow{transform:translateX(4px);color:var(--acc)}
+.p-arrow{color:var(--txt3);font-size:18px;align-self:center;transition:all .2s;flex-shrink:0}
+
+/* TOPICS GRID */
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.topic-card{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:var(--r2);padding:18px;transition:border-color .18s}
+.topic-card:hover{border-color:var(--acc)}
+
+/* ABOUT PAGE SPECIAL */
+.about-stat{background:var(--bg3);border:0.5px solid var(--bdr2);border-radius:var(--r2);padding:16px 20px;text-align:center}
+.about-stat .num{font-size:28px;font-weight:600;color:var(--acc);font-family:var(--mono)}
+.about-stat .lbl{font-size:11px;color:var(--txt3);margin-top:4px;letter-spacing:.8px;text-transform:uppercase}
+
+/* ADMIN HIGHLIGHT */
+.admin-editing [data-editable]{outline:1px dashed rgba(232,255,71,.2);outline-offset:2px;cursor:text;border-radius:3px}
+.admin-editing [data-editable]:hover{outline-color:rgba(232,255,71,.5)}
+
+/* UPLOAD ZONE */
+.upload-zone{border:0.5px dashed var(--bdr3);border-radius:var(--r);background:var(--bg3);cursor:pointer;transition:border-color .2s;display:flex;align-items:center;justify-content:center;min-height:100px;overflow:hidden}
+.upload-zone:hover{border-color:var(--acc)}
+
+/* FOOTER */
+#footer{border-top:0.5px solid var(--bdr);padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.footer-copy{font-size:12px;color:var(--txt3);font-family:var(--mono)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font-size:12px;color:var(--txt3);transition:color .15s}.footer-links a:hover{color:var(--acc)}
+
+@media(max-width:600px){
+  #nav{padding:0 16px}
+  .wrap,.wrap-sm{padding:0 16px}
+  .nav-links{gap:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div id="nav">
+  <div class="nav-logo" onclick="showPage('home')">hasnain<span>.</span></div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('home')" id="nl-home">Home</button>
+    <button class="nav-link" onclick="showPage('blog')" id="nl-blog">Blog</button>
+    <button class="nav-link" onclick="showPage('about')" id="nl-about">About</button>
+    <button id="admin-btn" class="off" onclick="toggleAdminPrompt()">EDIT</button>
+  </div>
+</div>
+
+<!-- PAGES -->
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <section class="sec" style="padding:100px 0 88px">
+    <div class="wrap">
+      <div class="hero-badge"><span class="hero-dot"></span> Integration Engineer · IBM ACE · Enterprise Systems</div>
+      <h1 id="hero-title" style="font-family:var(--serif);font-size:clamp(28px,5vw,50px);font-weight:400;font-style:italic;letter-spacing:-1px;line-height:1.13;margin-bottom:20px">
+        Hasnain Builds Things <span style="color:var(--acc)">(and Occasionally Breaks Them)</span>
+      </h1>
+      <p id="hero-sub" style="font-size:17px;color:var(--txt2);margin-bottom:10px">APIs, integrations, and the systems in between.</p>
+      <p id="hero-note" style="font-size:13px;color:var(--txt3);margin-bottom:40px">Real-world lessons from building and debugging enterprise systems.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-acc" onclick="showPage('blog')">Read Blog</button>
+        <button class="btn btn-ghost" onclick="showPage('about')">About Me</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <span class="sec-label">What this is</span>
+      <div style="background:var(--bg3);border:0.5px solid var(--bdr);border-left:2px solid var(--acc);border-radius:0 var(--r2) var(--r2) 0;padding:24px 28px">
+        <p id="home-tagline" style="font-size:16px;color:var(--txt2);line-height:1.85;font-style:italic;margin:0">This is where I document what I learn building real systems. Not theory. Not perfect architectures. Just what works, what breaks, and why.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <span class="sec-label">Topics & expertise</span>
+      <div class="topics-grid" id="topics-grid"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <span class="sec-label" style="margin:0">Featured posts</span>
+        <button id="home-new-post-btn" class="btn btn-acc btn-sm hide" onclick="showPage('editor')">+ New Post</button>
+      </div>
+      <div id="home-posts" style="border:0.5px solid var(--bdr);border-radius:var(--r2);overflow:hidden"></div>
+    </div>
+  </section>
+
+  <section class="sec" style="border-bottom:none;padding:72px 0">
+    <div class="wrap">
+      <span class="sec-label">About</span>
+      <div class="card" style="display:flex;gap:24px;align-items:flex-start">
+        <div id="avatar-wrap" style="flex-shrink:0;width:56px;height:56px;border-radius:50%;background:var(--bg4);border:0.5px solid var(--bdr2);overflow:hidden;display:flex;align-items:center;justify-content:center">
+          <span style="font-size:22px;font-weight:600;color:var(--acc)">H</span>
+        </div>
+        <div>
+          <div style="font-size:17px;font-weight:500;margin-bottom:8px">Hasnain Asim</div>
+          <p style="font-size:14px;color:var(--txt2);line-height:1.8;margin:0">Enterprise Integration Engineer. I connect systems for a living — IBM ACE, MQ, APIs, and everything in between. <a href="#" onclick="showPage('about');return false" style="color:var(--acc)">Read more →</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- BLOG -->
+<div id="page-blog" class="page">
+  <div class="wrap" style="padding-top:64px;padding-bottom:96px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:16px">
+      <div>
+        <h1 style="font-family:var(--serif);font-size:38px;font-weight:400;font-style:italic;letter-spacing:-.5px;margin-bottom:6px">Writing</h1>
+        <p id="blog-count" style="font-size:14px;color:var(--txt3)">Loading…</p>
+      </div>
+      <button id="blog-new-post-btn" class="btn btn-acc hide" onclick="showPage('editor')">+ New Post</button>
+    </div>
+    <div id="blog-filters" style="display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap"></div>
+    <div id="blog-list" style="display:grid;gap:10px"></div>
+  </div>
+</div>
+
+<!-- POST VIEW -->
+<div id="page-post" class="page">
+  <div class="wrap-sm" style="padding-top:64px;padding-bottom:96px">
+    <div style="display:flex;gap:10px;margin-bottom:40px">
+      <button class="btn btn-ghost" onclick="showPage('blog')">← Back</button>
+      <button id="post-edit-btn" class="btn btn-sm hide" style="color:var(--acc);border-color:var(--acc)" onclick="editCurrentPost()">Edit Post</button>
+    </div>
+    <div id="post-cover-wrap"></div>
+    <div id="post-meta" style="margin-bottom:20px"></div>
+    <h1 id="post-title" style="font-family:var(--serif);font-size:clamp(24px,4vw,40px);font-weight:400;font-style:italic;letter-spacing:-.6px;line-height:1.2;margin-bottom:18px"></h1>
+    <p id="post-excerpt" style="font-size:17px;color:var(--txt2);line-height:1.75;margin-bottom:44px;padding-bottom:36px;border-bottom:0.5px solid var(--bdr)"></p>
+    <div id="post-body" class="prose"></div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div id="page-about" class="page">
+  <div class="wrap-sm" style="padding-top:64px;padding-bottom:96px">
+    <h1 style="font-family:var(--serif);font-size:38px;font-weight:400;font-style:italic;letter-spacing:-.5px;margin-bottom:48px">About</h1>
+
+    <div class="card" style="display:flex;gap:28px;align-items:flex-start;margin-bottom:40px">
+      <div id="about-avatar-wrap" style="flex-shrink:0;width:72px;height:72px;border-radius:50%;background:var(--bg4);border:0.5px solid var(--bdr2);overflow:hidden;display:flex;align-items:center;justify-content:center">
+        <span style="font-size:28px;font-weight:600;color:var(--acc)">H</span>
+      </div>
+      <div>
+        <div style="font-size:20px;font-weight:500;margin-bottom:4px">Hasnain Asim</div>
+        <div style="font-size:14px;color:var(--txt2);margin-bottom:12px">Enterprise Integration Engineer</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="about-tags"></div>
+      </div>
+    </div>
+
+    <!-- Funny but professional bio -->
+    <div style="margin-bottom:40px">
+      <span class="sec-label">The real story</span>
+      <div class="prose">
+        <p>My job title is <strong>Enterprise Integration Engineer</strong>. What that actually means is: I am the person who figures out why System A refuses to talk to System B, usually at 2am, usually two days before a deadline, usually with three different teams all pointing at each other.</p>
+        <p>I have 4+ years of experience doing this professionally with <strong>IBM App Connect Enterprise, IBM API Connect, and IBM DataPower</strong>. Before that, I did it unofficially while pretending everything was fine.</p>
+        <p>My work is essentially enterprise matchmaking — connecting systems that were never designed to communicate, speaking multiple languages simultaneously (REST, SOAP, ISO 8583, ISO 20022, JSON, XML), and making sure the messages get delivered even when the infrastructure has opinions.</p>
+        <p>I've built integration flows for some genuinely interesting problems: <strong>Raast payment flows</strong> (Pakistan's real-time payment system), <strong>NADRA government APIs</strong> (national identity verification), <strong>self-service kiosk banking</strong> (so you don't have to talk to a human at the branch), and <strong>pensioner verification systems</strong> (making sure pensions go to the right people, which feels important).</p>
+        <p>I've connected: <strong>Temenos T24</strong> core banking · <strong>Siebel CRM</strong> · <strong>Salesforce Marketing Cloud</strong> · <strong>WhatsApp Business</strong> · <strong>Kafka</strong> · <strong>MQ-based messaging</strong> · various government APIs.</p>
+        <p>On the technical side I work in <strong>ESQL, Java, OFSML</strong> and whatever format the receiving system demands that week.</p>
+        <blockquote><p>Integration work sits at the intersection of systems, teams, and competing requirements. I'm comfortable navigating that — whether it means resolving conflicts between business and technical stakeholders, translating complex requirements into clean architecture, or keeping production systems alive under pressure. Mostly the last one.</p></blockquote>
+        <p>This blog is where I document what I learn. The things that aren't in the docs. The gotchas that take three hours to find. The patterns that work and the ones that looked smart until they didn't. If something here saves you a debugging session, we're even.</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:40px">
+      <div class="about-stat"><div class="num">4+</div><div class="lbl">Years experience</div></div>
+      <div class="about-stat"><div class="num">IBM</div><div class="lbl">ACE · API Connect · DataPower</div></div>
+      <div class="about-stat"><div class="num">∞</div><div class="lbl">Debugging hours</div></div>
+      <div class="about-stat"><div class="num">0</div><div class="lbl">Regrets (mostly)</div></div>
+    </div>
+
+    <!-- Skills -->
+    <div style="margin-bottom:40px">
+      <span class="sec-label">Stack & tools</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="about-skills">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div>
+      <span class="sec-label">Get in touch</span>
+      <div id="contact-section"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div id="page-editor" class="page">
+  <div style="max-width:800px;margin:0 auto;padding:48px 24px 96px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:40px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="showPage('blog')">← Cancel</button>
+      <h1 id="editor-title" style="font-size:20px;font-weight:500;flex:1">New Post</h1>
+      <button class="btn btn-ghost btn-sm" onclick="savePost(false)">Save Draft</button>
+      <button class="btn btn-acc btn-sm" onclick="savePost(true)" id="publish-btn">Publish</button>
+    </div>
+
+    <div id="editor-wrap" style="display:grid;gap:20px">
+      <div class="field">
+        <label>Cover Image</label>
+        <div class="upload-zone" id="cover-upload-zone" onclick="document.getElementById('cover-file').click()" style="min-height:180px">
+          <div id="cover-placeholder" style="text-align:center;color:var(--txt3)">
+            <div style="font-size:28px;margin-bottom:8px">+</div>
+            <div style="font-size:13px">Click to upload cover image</div>
+            <div style="font-size:11px;margin-top:4px">PNG · JPG · GIF · WebP</div>
+          </div>
+          <img id="cover-preview" style="width:100%;height:200px;object-fit:cover;display:none" alt=""/>
+        </div>
+        <input type="file" id="cover-file" accept="image/*" style="display:none" onchange="handleCoverUpload(this)"/>
+        <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;margin-top:6px;display:none" id="cover-remove" onclick="removeCover()">Remove image</button>
+      </div>
+
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="e-title" placeholder="Post title…" style="font-size:20px;font-family:var(--serif);font-style:italic" oninput="autoSlug()"/>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="field">
+          <label>Tag / Category</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" id="tag-presets"></div>
+          <input type="text" id="e-tag" placeholder="Or type custom…"/>
+        </div>
+        <div>
+          <div class="field">
+            <label>Read Time (min)</label>
+            <input type="number" id="e-readtime" value="5" min="1" max="120"/>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="e-date"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Excerpt <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-size:11px">— shown in post cards</span></label>
+        <textarea id="e-excerpt" rows="2" placeholder="One or two sentence summary…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Content <span style="color:var(--txt3);text-transform:none;letter-spacing:0;font-size:11px">— **bold** *italic* `code` numbered/bullet lists</span></label>
+        <textarea id="e-content" rows="20" style="font-family:var(--mono);font-size:13px" placeholder="Write your post…"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN SETTINGS (only in admin mode) -->
+<div id="page-settings" class="page">
+  <div class="wrap" style="padding-top:64px;padding-bottom:96px">
+    <h1 style="font-size:22px;font-weight:500;margin-bottom:40px">Site Settings</h1>
+    <div style="display:grid;gap:32px;max-width:600px">
+
+      <div>
+        <span class="sec-label">Profile Photo</span>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div id="settings-avatar" style="width:72px;height:72px;border-radius:50%;overflow:hidden;background:var(--bg4);border:0.5px solid var(--bdr2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:24px;color:var(--acc)">H</span></div>
+          <div>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('avatar-file').click()">Upload Photo</button>
+            <input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)"/>
+            <p style="font-size:12px;color:var(--txt3);margin-top:6px">Square image recommended</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="field"><label>Hero Tagline</label><input type="text" id="s-tagline" placeholder="(and Occasionally Breaks Them)"/></div>
+      <div class="field"><label>Hero Subtitle</label><input type="text" id="s-subtitle" placeholder="APIs, integrations…"/></div>
+      <div class="field"><label>Email</label><input type="email" id="s-email" placeholder="your@email.com"/></div>
+      <div class="field"><label>LinkedIn URL</label><input type="text" id="s-linkedin" placeholder="linkedin.com/in/username"/></div>
+
+      <div>
+        <span class="sec-label">Change Admin Password</span>
+        <div style="display:grid;gap:10px">
+          <input type="password" id="s-newpass" placeholder="New password…"/>
+          <input type="password" id="s-confirmpass" placeholder="Confirm new password…"/>
+          <button class="btn btn-ghost btn-sm" onclick="changePassword()" style="width:fit-content">Update Password</button>
+        </div>
+      </div>
+
+      <div>
+        <span class="sec-label">Topics</span>
+        <div id="settings-topics" style="display:grid;gap:8px"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addTopic()">+ Add Topic</button>
+      </div>
+
+      <button class="btn btn-acc" onclick="saveSettings()">Save All Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASSWORD MODAL -->
+<div id="login-modal" class="modal-bg hide">
+  <div class="modal">
+    <div style="font-size:18px;font-weight:500;margin-bottom:6px">Admin Access</div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:24px">Enter your password to edit the site.</p>
+    <input type="password" id="pw-input" placeholder="Password…" onkeydown="if(event.key==='Enter')tryLogin()"/>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeLogin()">Cancel</button>
+      <button class="btn btn-acc btn-sm" onclick="tryLogin()">Enter</button>
+    </div>
+    <p id="pw-error" style="color:var(--red);font-size:12px;margin-top:10px;display:none">Wrong password. Try again.</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- FOOTER -->
+<div id="footer">
+  <span class="footer-copy">Built by Hasnain · <em style="font-family:var(--sans)">Powered by controlled chaos</em> · © <span id="yr"></span></span>
+  <div class="footer-links" id="footer-links"></div>
+</div>
+
+<script>
+// ─── DEFAULTS ──────────────────────────────────────────────────────────────────
+const DEFAULT = {
+  profile: {
+    name: "Hasnain Asim",
+    title: "Enterprise Integration Engineer",
+    tagline: "(and Occasionally Breaks Them)",
+    subtitle: "APIs, integrations, and the systems in between.",
+    homeTagline: "This is where I document what I learn building real systems. Not theory. Not perfect architectures. Just what works, what breaks, and why.",
+    email: "",
+    linkedin: "",
+    avatar: null,
+    skills: ["IBM ACE","IBM API Connect","IBM DataPower","REST APIs","SOAP","MQ","Kafka","ESQL","Java","ISO 8583","ISO 20022","Temenos T24","Siebel CRM","Salesforce","WhatsApp Business","NADRA","JSON","XML","OFSML"]
+  },
+  topics: [
+    {id:1,icon:"⚡",name:"API Integration",desc:"IBM ACE, REST, SOAP patterns"},
+    {id:2,icon:"🔁",name:"Event-Driven Systems",desc:"MQ, Kafka, async flows"},
+    {id:3,icon:"🧩",name:"Middleware & System Design",desc:"Flows that survive production"},
+    {id:4,icon:"🔍",name:"Debugging Production",desc:"Real incidents, real root causes"},
+    {id:5,icon:"📐",name:"Patterns & Anti-Patterns",desc:"What to build — and what to avoid"},
+    {id:6,icon:"🏦",name:"Banking & Fintech",desc:"Raast, T24, ISO 8583, payments"}
+  ],
+  posts: [
+    {id:1,title:"I Broke Production — Here's What It Taught Me",slug:"broke-production",tag:"incident report",excerpt:"A post-mortem on a real outage, what triggered it, and the three things I'll never skip again.",content:`It was a Tuesday afternoon. We were deploying what should have been a routine change — a small update to an IBM ACE message flow that added a new field mapping to an outbound REST call.
+
+Twenty minutes after the deployment, the alerts started. Thousands of messages silently dropping. No error logs. No obvious failure. Just nothing going through.
+
+**The root cause took three hours to find.**
+
+We added a field \`transactionId\` to the output message. The consuming system already had a field with the same name in a different schema context. No mapping error. No exception. The consumer just silently used *its* version of the field and dropped the payload as unprocessable.
+
+**Three things I'll never skip again:**
+
+1. Consumer-side schema testing is not optional — we validated our output against our own schema but not the consumer's expected input schema. These are not the same test.
+2. Silent drops are worse than loud failures — an exception is easy to catch; a message that is accepted and silently discarded is invisible until the downstream system reports missing data.
+3. Rollback doesn't undo side effects — rolling back the producer doesn't help if messages are already in the queue in the new format.
+
+---
+
+The best post-mortem outcome isn't "we found the bug." It's "we changed the system so this class of bug can't go undetected again."`,date:"2025-06-12",readTime:"8",coverImage:null,published:true},
+    {id:2,title:"IBM ACE: Things That Aren't Obvious Until They Hurt",slug:"ibm-ace-gotchas",tag:"ibm ace",excerpt:"Hard-won lessons from ACE that aren't in the docs — ESQL quirks, threading traps, and deployment gotchas.",content:`IBM ACE documentation is thorough. IBM ACE *reality* is a different thing.
+
+This is a list of gotchas I've hit, watched teammates hit, or found buried in a Stack Overflow thread from 2017 with three upvotes.
+
+**ESQL SET doesn't create the node if the path doesn't exist**
+
+You write \`SET OutputRoot.JSON.Data.customer.id = InputRoot.JSON.Data.id;\` and wonder why the output is missing the field. If any node in that path doesn't exist yet, SET silently does nothing. You need to CREATE the path first. This surprises everyone exactly once.
+
+**Propagate in a Compute node doesn't exit**
+
+Calling \`PROPAGATE TO TERMINAL 'out'\` continues execution of the ESQL function — it doesn't exit. If you have logic after the PROPAGATE, it still runs. Always add \`RETURN;\` after PROPAGATE. I've seen duplicate messages sent to downstream systems because of this.
+
+**LocalEnvironment is not cleared between messages**
+
+The LocalEnvironment tree persists across the message flow execution within the same thread invocation. Always explicitly SET the paths you depend on — don't assume they're empty.
+
+**HTTP timeout defaults are not production-safe**
+
+The default HTTP request timeout in ACE's HTTPRequest node is 0 — meaning it waits forever. In production, a slow downstream API will hold your thread indefinitely. Always set explicit timeouts.
+
+**Deploying a BAR file doesn't restart in-flight messages**
+
+Messages currently being processed complete with the old logic. Messages arriving after the deploy get new logic. During the deploy window you can have both running simultaneously. If your change is not backward-compatible, you need a drain strategy before deploying.
+
+---
+
+The best ACE developers aren't the ones who've read the most docs. They're the ones who've broken the most things and kept notes.`,date:"2025-07-03",readTime:"10",coverImage:null,published:true},
+    {id:3,title:"Why Most Integrations Fail in Real Life",slug:"why-integrations-fail",tag:"integration",excerpt:"The gap between a well-designed integration on paper and one that survives contact with reality.",content:`Every integration looks clean in the architecture diagram. Two boxes. An arrow. Done.
+
+Then you deploy it and discover that System A sends dates as DD/MM/YYYY, System B expects YYYY-MM-DD, the API contract was written by someone who left the company, and the load test was done with 10 records when production sends 50,000.
+
+**The five ways I've seen integrations actually fail:**
+
+1. **The contract was never tested end-to-end** — unit tests passed; the real message shape was wrong. Integration tests exist for a reason.
+2. **Error handling was an afterthought** — the happy path worked beautifully. Nobody asked "what happens when the downstream times out after partial processing?"
+3. **Timeouts were set to infinity** — or not set at all. One slow dependency takes down the thread pool.
+4. **The retry logic creates duplicates** — you retry on failure, but the first attempt actually succeeded and just returned a timeout. Now you've sent the same payment twice.
+5. **Nobody owns the integration in production** — the team that built it has moved on. The team running it doesn't understand it. This is the most dangerous failure mode and the most common.
+
+---
+
+Integration is not a one-time build. It's an ongoing relationship with systems that change, teams that evolve, and requirements that were only correct on the day they were written.
+
+Build for change. Document everything. And make sure someone actually owns it.`,date:"2025-07-20",readTime:"7",coverImage:null,published:true}
+  ],
+  pwHash: btoa("hasnain2025")
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = loadState();
+let adminMode = false;
+let currentPost = null;
+let editingPost = null;
+let currentFilter = "all";
+
+function loadState() {
+  try { const s = localStorage.getItem("hs_v2"); return s ? JSON.parse(s) : structuredClone ? structuredClone(DEFAULT) : JSON.parse(JSON.stringify(DEFAULT)); }
+  catch { return JSON.parse(JSON.stringify(DEFAULT)); }
+}
+function saveState() { try { localStorage.setItem("hs_v2", JSON.stringify(state)); } catch {} }
+function toast(msg, dur=2200) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), dur);
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+function toggleAdminPrompt() {
+  if (adminMode) { exitAdmin(); return; }
+  document.getElementById("login-modal").classList.remove("hide");
+  setTimeout(() => document.getElementById("pw-input").focus(), 50);
+}
+function closeLogin() {
+  document.getElementById("login-modal").classList.add("hide");
+  document.getElementById("pw-input").value = "";
+  document.getElementById("pw-error").style.display = "none";
+}
+function tryLogin() {
+  const pw = document.getElementById("pw-input").value;
+  if (btoa(pw) === state.pwHash) {
+    closeLogin();
+    enterAdmin();
+  } else {
+    document.getElementById("pw-error").style.display = "block";
+    document.getElementById("pw-input").value = "";
+    document.getElementById("pw-input").focus();
+  }
+}
+function enterAdmin() {
+  adminMode = true;
+  document.getElementById("admin-btn").textContent = "● EDITING";
+  document.getElementById("admin-btn").className = "on";
+  document.getElementById("home-new-post-btn").classList.remove("hide");
+  document.getElementById("blog-new-post-btn").classList.remove("hide");
+  document.getElementById("post-edit-btn").classList.remove("hide");
+  // Add settings nav link
+  if (!document.getElementById("nl-settings")) {
+    const s = document.createElement("button");
+    s.className = "nav-link"; s.id = "nl-settings"; s.textContent = "Settings";
+    s.onclick = () => { showPage("settings"); loadSettingsForm(); };
+    document.getElementById("admin-btn").before(s);
+  }
+  toast("Edit mode on — you're the only one who can do this 🔐");
+  renderAll();
+}
+function exitAdmin() {
+  adminMode = false;
+  document.getElementById("admin-btn").textContent = "EDIT";
+  document.getElementById("admin-btn").className = "off";
+  document.getElementById("home-new-post-btn").classList.add("hide");
+  document.getElementById("blog-new-post-btn").classList.add("hide");
+  document.getElementById("post-edit-btn").classList.add("hide");
+  const slink = document.getElementById("nl-settings");
+  if (slink) slink.remove();
+  toast("Exited edit mode");
+  renderAll();
+}
+function changePassword() {
+  const np = document.getElementById("s-newpass").value;
+  const cp = document.getElementById("s-confirmpass").value;
+  if (!np) { toast("Enter a new password"); return; }
+  if (np !== cp) { toast("Passwords don't match"); return; }
+  if (np.length < 6) { toast("Password too short (min 6 chars)"); return; }
+  state.pwHash = btoa(np);
+  saveState();
+  document.getElementById("s-newpass").value = "";
+  document.getElementById("s-confirmpass").value = "";
+  toast("Password updated ✓");
+}
+
+// ─── PAGES ───────────────────────────────────────────────────────────────────
+const PAGE_IDS = ["home","blog","post","about","editor","settings"];
+function showPage(id) {
+  PAGE_IDS.forEach(p => {
+    document.getElementById("page-"+p).classList.toggle("active", p === id);
+  });
+  document.querySelectorAll(".nav-link").forEach(l => {
+    l.classList.toggle("active", l.id === "nl-"+id);
+  });
+  window.scrollTo(0, 0);
+  if (id === "blog") renderBlog();
+  if (id === "home") renderHome();
+  if (id === "editor") setupEditor();
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderAll() { renderHome(); renderBlog(); renderAbout(); }
+
+function renderHome() {
+  const p = state.profile;
+  // hero
+  document.getElementById("hero-title").innerHTML = `Hasnain Builds Things <span style="color:var(--acc)">${escHtml(p.tagline)}</span>`;
+  document.getElementById("hero-sub").textContent = p.subtitle;
+  // topics
+  const tg = document.getElementById("topics-grid");
+  tg.innerHTML = state.topics.map(t => `
+    <div class="topic-card">
+      <div style="font-size:20px;margin-bottom:12px">${t.icon}</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px">${escHtml(t.name)}</div>
+      <div style="font-size:12px;color:var(--txt3)">${escHtml(t.desc)}</div>
+    </div>
+  `).join("");
+  // posts
+  const pub = state.posts.filter(p => p.published);
+  const hp = document.getElementById("home-posts");
+  if (pub.length === 0) {
+    hp.innerHTML = `<div style="padding:48px;text-align:center;color:var(--txt3);font-size:14px">No posts yet${adminMode?" — click '+ New Post' above":""}</div>`;
+  } else {
+    hp.innerHTML = pub.slice(0,5).map((p,i) => postRowHtml(p, i < pub.length-1 && i < 4)).join("");
+  }
+  // avatar
+  updateAvatarEl("avatar-wrap", p.avatar);
+}
+
+function renderBlog() {
+  const visible = state.posts.filter(p => adminMode || p.published);
+  document.getElementById("blog-count").textContent = `${state.posts.filter(p=>p.published).length} posts published`;
+  // filters
+  const tags = ["all", ...new Set(state.posts.map(p => p.tag))];
+  document.getElementById("blog-filters").innerHTML = tags.map(t => `
+    <button class="btn btn-sm" style="font-size:12px;padding:5px 12px;${currentFilter===t?'background:var(--acc);color:#000;border-color:var(--acc);font-weight:600':'color:var(--txt2);border-color:var(--bdr2)'}" onclick="setFilter('${t}')">${t}</button>
+  `).join("");
+  // list
+  const filtered = visible.filter(p => currentFilter==="all" || p.tag===currentFilter);
+  const bl = document.getElementById("blog-list");
+  if (filtered.length === 0) {
+    bl.innerHTML = `<div style="padding:60px;text-align:center;color:var(--txt3);font-size:14px">No posts in this category.</div>`;
+    return;
+  }
+  bl.innerHTML = filtered.map(p => `
+    <div class="card card-hover" style="display:flex;gap:20px;align-items:flex-start;padding:22px 24px" onclick="openPost(${p.id})">
+      ${p.coverImage ? `<img src="${p.coverImage}" style="width:88px;height:62px;object-fit:cover;border-radius:var(--r);flex-shrink:0" alt=""/>` : ""}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
+          <span class="tag">${escHtml(p.tag)}</span>
+          ${!p.published && adminMode ? `<span class="tag" style="color:var(--amber);border-color:var(--amber)">draft</span>` : ""}
+          <span style="font-size:11px;color:var(--txt3);font-family:var(--mono);margin-left:auto">${p.date} · ${p.readTime} min</span>
+        </div>
+        <div style="font-size:15px;font-weight:500;margin-bottom:6px;line-height:1.4">${escHtml(p.title)}</div>
+        <div style="font-size:13px;color:var(--txt3);line-height:1.6">${escHtml(p.excerpt)}</div>
+      </div>
+      ${adminMode ? `
+        <div style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="editPostById(${p.id})">Edit</button>
+          <button class="btn btn-danger" onclick="deletePost(${p.id})">Delete</button>
+        </div>` : ""}
+      <span class="p-arrow">→</span>
+    </div>
+  `).join("");
+}
+
+function renderAbout() {
+  const p = state.profile;
+  updateAvatarEl("about-avatar-wrap", p.avatar);
+  // skills
+  document.getElementById("about-skills").innerHTML = (p.skills||[]).map(s =>
+    `<span class="tag" style="font-size:12px">${escHtml(s)}</span>`
+  ).join("");
+  // contact
+  const cc = document.getElementById("contact-section");
+  if (p.email || p.linkedin) {
+    cc.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      ${p.email ? `<div class="card"><div style="font-size:11px;color:var(--txt3);margin-bottom:4px;letter-spacing:.8px">EMAIL</div><a href="mailto:${p.email}" style="color:var(--acc);font-size:14px">${p.email}</a></div>` : ""}
+      ${p.linkedin ? `<div class="card"><div style="font-size:11px;color:var(--txt3);margin-bottom:4px;letter-spacing:.8px">LINKEDIN</div><a href="https://${p.linkedin}" target="_blank" style="color:var(--acc);font-size:14px">${p.linkedin}</a></div>` : ""}
+    </div>`;
+  } else {
+    cc.innerHTML = `<p style="color:var(--txt3);font-size:14px">No contact info yet.${adminMode?" Add it in Settings.":""}</p>`;
+  }
+  // footer links
+  const fl = document.getElementById("footer-links");
+  const links = [];
+  if (p.email) links.push(`<a href="mailto:${p.email}">Email</a>`);
+  if (p.linkedin) links.push(`<a href="https://${p.linkedin}" target="_blank">LinkedIn</a>`);
+  fl.innerHTML = links.join("");
+}
+
+function postRowHtml(p, hasBorder) {
+  return `<div class="post-row" style="${hasBorder?'':'border-bottom:none'}" onclick="openPost(${p.id})">
+    ${p.coverImage ? `<img src="${p.coverImage}" style="width:76px;height:52px;object-fit:cover;border-radius:var(--r);flex-shrink:0" alt=""/>` : ""}
+    <div style="flex:1;min-width:0">
+      <span class="tag" style="margin-bottom:8px;display:inline-block">${escHtml(p.tag)}</span>
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px;line-height:1.4">${escHtml(p.title)}</div>
+      <div style="font-size:13px;color:var(--txt3);line-height:1.55">${escHtml(p.excerpt)}</div>
+    </div>
+    <span class="p-arrow">→</span>
+  </div>`;
+}
+
+// ─── POST VIEW ────────────────────────────────────────────────────────────────
+function openPost(id) {
+  currentPost = state.posts.find(p => p.id === id);
+  if (!currentPost) return;
+  document.getElementById("post-cover-wrap").innerHTML = currentPost.coverImage
+    ? `<img src="${currentPost.coverImage}" style="width:100%;height:260px;object-fit:cover;border-radius:var(--r2);margin-bottom:36px" alt=""/>`
+    : "";
+  document.getElementById("post-meta").innerHTML = `<span class="tag">${escHtml(currentPost.tag)}</span> <span style="font-size:12px;color:var(--txt3);font-family:var(--mono);margin-left:10px">${currentPost.date} · ${currentPost.readTime} min read</span>`;
+  document.getElementById("post-title").textContent = currentPost.title;
+  document.getElementById("post-excerpt").textContent = currentPost.excerpt;
+  document.getElementById("post-body").innerHTML = renderMarkdown(currentPost.content);
+  showPage("post");
+}
+function editCurrentPost() {
+  if (!currentPost) return;
+  editPostById(currentPost.id);
+}
+function editPostById(id) {
+  editingPost = state.posts.find(p => p.id === id);
+  showPage("editor");
+}
+
+// ─── EDITOR ───────────────────────────────────────────────────────────────────
+const TAG_PRESETS = ["incident report","ibm ace","integration","debugging","system design","esql","mq","kafka","devlog","banking","fintech"];
+
+function setupEditor() {
+  const p = editingPost;
+  document.getElementById("editor-title").textContent = p ? "Edit Post" : "New Post";
+  document.getElementById("e-title").value = p ? p.title : "";
+  document.getElementById("e-tag").value = p ? p.tag : "";
+  document.getElementById("e-readtime").value = p ? p.readTime : "5";
+  document.getElementById("e-date").value = p ? p.date : new Date().toISOString().slice(0,10);
+  document.getElementById("e-excerpt").value = p ? p.excerpt : "";
+  document.getElementById("e-content").value = p ? p.content : "";
+  // cover
+  const prev = document.getElementById("cover-preview");
+  const ph = document.getElementById("cover-placeholder");
+  const rm = document.getElementById("cover-remove");
+  if (p && p.coverImage) {
+    prev.src = p.coverImage; prev.style.display = "block"; ph.style.display = "none"; rm.style.display = "inline-flex";
+  } else {
+    prev.style.display = "none"; ph.style.display = "block"; rm.style.display = "none";
+  }
+  // tag presets
+  document.getElementById("tag-presets").innerHTML = TAG_PRESETS.map(t =>
+    `<span class="tag" style="cursor:pointer" onclick="document.getElementById('e-tag').value='${t}'">${t}</span>`
+  ).join("");
+}
+
+function autoSlug() {
+  // just used internally, no visible slug field needed
+}
+
+function handleCoverUpload(input) {
+  const f = input.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const src = e.target.result;
+    document.getElementById("cover-preview").src = src;
+    document.getElementById("cover-preview").style.display = "block";
+    document.getElementById("cover-placeholder").style.display = "none";
+    document.getElementById("cover-remove").style.display = "inline-flex";
+    if (!editingPost) editingPost = {};
+    editingPost._pendingCover = src;
+  };
+  r.readAsDataURL(f);
+}
+function removeCover() {
+  document.getElementById("cover-preview").style.display = "none";
+  document.getElementById("cover-placeholder").style.display = "block";
+  document.getElementById("cover-remove").style.display = "none";
+  document.getElementById("cover-file").value = "";
+  if (editingPost) editingPost._pendingCover = null;
+}
+
+function savePost(publish) {
+  const title = document.getElementById("e-title").value.trim();
+  const content = document.getElementById("e-content").value.trim();
+  if (!title) { toast("Add a title first"); return; }
+  if (!content) { toast("Write some content first"); return; }
+
+  const prevCover = editingPost ? editingPost.coverImage : null;
+  const pendingCover = editingPost ? editingPost._pendingCover : undefined;
+
+  const post = {
+    id: editingPost && editingPost.id ? editingPost.id : Date.now(),
+    title,
+    slug: title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),
+    tag: document.getElementById("e-tag").value.trim() || "general",
+    readTime: document.getElementById("e-readtime").value || "5",
+    date: document.getElementById("e-date").value || new Date().toISOString().slice(0,10),
+    excerpt: document.getElementById("e-excerpt").value.trim() || title,
+    content,
+    coverImage: pendingCover !== undefined ? (pendingCover === null ? null : pendingCover) : prevCover,
+    published: publish
+  };
+  delete post._pendingCover;
+
+  const idx = state.posts.findIndex(p => p.id === post.id);
+  if (idx >= 0) state.posts[idx] = post;
+  else state.posts.unshift(post);
+
+  saveState();
+  editingPost = null;
+  currentPost = post;
+  toast(publish ? "Post published ✓" : "Draft saved ✓");
+  if (publish) openPost(post.id);
+  else showPage("blog");
+}
+
+function deletePost(id) {
+  if (!confirm("Delete this post? This cannot be undone.")) return;
+  state.posts = state.posts.filter(p => p.id !== id);
+  saveState();
+  renderBlog();
+  toast("Post deleted");
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  renderBlog();
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+function loadSettingsForm() {
+  const p = state.profile;
+  document.getElementById("s-tagline").value = p.tagline || "";
+  document.getElementById("s-subtitle").value = p.subtitle || "";
+  document.getElementById("s-email").value = p.email || "";
+  document.getElementById("s-linkedin").value = p.linkedin || "";
+  updateAvatarEl("settings-avatar", p.avatar);
+  renderSettingsTopics();
+}
+
+function renderSettingsTopics() {
+  document.getElementById("settings-topics").innerHTML = state.topics.map((t,i) => `
+    <div style="display:grid;grid-template-columns:56px 1fr 1fr auto;gap:8px;align-items:center">
+      <input type="text" value="${t.icon}" style="text-align:center;font-size:18px" onchange="state.topics[${i}].icon=this.value"/>
+      <input type="text" value="${escHtml(t.name)}" onchange="state.topics[${i}].name=this.value"/>
+      <input type="text" value="${escHtml(t.desc)}" onchange="state.topics[${i}].desc=this.value"/>
+      <button class="btn btn-danger" onclick="removeTopic(${i})">✕</button>
+    </div>
+  `).join("");
+}
+function addTopic() {
+  state.topics.push({id:Date.now(),icon:"🔧",name:"New Topic",desc:"Description"});
+  renderSettingsTopics();
+}
+function removeTopic(i) {
+  state.topics.splice(i,1);
+  renderSettingsTopics();
+}
+
+function saveSettings() {
+  state.profile.tagline = document.getElementById("s-tagline").value.trim() || state.profile.tagline;
+  state.profile.subtitle = document.getElementById("s-subtitle").value.trim() || state.profile.subtitle;
+  state.profile.email = document.getElementById("s-email").value.trim();
+  state.profile.linkedin = document.getElementById("s-linkedin").value.trim();
+  saveState();
+  renderAll();
+  toast("Settings saved ✓");
+}
+
+function handleAvatarUpload(input) {
+  const f = input.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    state.profile.avatar = e.target.result;
+    updateAvatarEl("settings-avatar", state.profile.avatar);
+    updateAvatarEl("avatar-wrap", state.profile.avatar);
+    updateAvatarEl("about-avatar-wrap", state.profile.avatar);
+    toast("Photo uploaded — save settings to keep it");
+  };
+  r.readAsDataURL(f);
+}
+
+function updateAvatarEl(elId, src) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (src) {
+    el.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover" alt="Hasnain"/>`;
+  } else {
+    el.innerHTML = `<span style="font-size:${elId.includes("settings")?24:20}px;font-weight:600;color:var(--acc)">H</span>`;
+  }
+}
+
+// ─── MARKDOWN ────────────────────────────────────────────────────────────────
+function renderMarkdown(md) {
+  if (!md) return "";
+  let html = md
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>")
+    .replace(/`([^`\n]+)`/g,"<code>$1</code>")
+    .replace(/^---$/gm,"<hr/>")
+    .replace(/^### (.+)$/gm,"<h3>$1</h3>")
+    .replace(/^> (.+)$/gm,"<blockquote><p>$1</p></blockquote>")
+    .replace(/^\d+\. (.+)$/gm,"<li>$1</li>")
+    .replace(/^[-*] (.+)$/gm,"<li>$1</li>");
+
+  // wrap li runs
+  html = html.replace(/(<li>[\s\S]*?<\/li>(\n|$))+/g, m => `<ol>${m}</ol>`);
+
+  // paragraphs
+  html = html.split(/\n\n+/).map(block => {
+    if (/^<(h[1-6]|ol|ul|blockquote|hr)/.test(block.trim())) return block;
+    if (!block.trim()) return "";
+    return `<p>${block.replace(/\n/g,"<br/>")}</p>`;
+  }).join("\n");
+
+  return html;
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.getElementById("yr").textContent = new Date().getFullYear();
+renderAll();
+</script>
+</body>
+</html>
