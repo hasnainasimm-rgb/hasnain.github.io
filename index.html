@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hasnain · Integration Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#080808;--bg2:#0f0f0f;--bg3:#141414;--bg4:#1a1a1a;--bg5:#222;--bg6:#2a2a2a;
+--txt:#efefef;--txt2:#888;--txt3:#444;--txt4:#ccc;
+--acc:#e8ff47;--acc2:#c8de20;--acc-dim:rgba(232,255,71,.08);
+--bdr:rgba(255,255,255,.06);--bdr2:rgba(255,255,255,.1);
+--r:8px;--r2:12px;
+--mono:'DM Mono',monospace;
+--serif:'Instrument Serif',serif;
+--sans:'Geist',system-ui,sans-serif;
+}
+html{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{min-height:100vh}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
+input,textarea,select{font-family:var(--sans)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+const DEFAULT_DATA={
+  profile:{
+    name:"Hasnain",
+    title:"Integration Engineer",
+    tagline:"Builds Things (and Occasionally Breaks Them)",
+    bio:"I'm an Integration Engineer working with IBM ACE and enterprise systems. I build APIs, design flows, and fix things when they go wrong. This blog is my way of thinking out loud — part documentation, part catharsis.",
+    email:"",
+    linkedin:"",
+    avatar:null,
+    tags:["IBM ACE","REST APIs","MQ","System Design","ESQL"]
+  },
+  posts:[
+    {id:1,title:"I Broke Production — Here's What It Taught Me",slug:"broke-production",tag:"incident report",excerpt:"A post-mortem on a real outage, what triggered it, and the three things I'll never skip again.",content:`It was a Tuesday afternoon. We were deploying what should have been a routine change — a small update to an IBM ACE message flow.
+
+Twenty minutes after the deployment, the alerts started. Thousands of messages silently dropping. No error logs. No obvious failure. Just nothing going through.
+
+**The root cause took three hours to find.**
+
+We added a field \`transactionId\` to the output message. The consuming system already had a field with the same name in a different schema context. No mapping error. No exception. The consumer just silently used *its* version of the field and dropped the payload as unprocessable.
+
+**Three things I'll never skip again:**
+
+1. Consumer-side schema testing is not optional — we validated our output against our own schema but not against the consumer's expected input schema.
+
+2. Silent drops are worse than loud failures — an exception is easy to catch; a message silently discarded is invisible.
+
+3. Rollback doesn't undo side effects — rolling back the producer doesn't help if messages are already in the queue in the new format.
+
+The best post-mortem outcome isn't "we found the bug." It's "we changed the system so this class of bug can't go undetected again."`,date:"2025-06-12",readTime:"8",coverImage:null,published:true},
+    {id:2,title:"IBM ACE: Things That Aren't Obvious Until They Hurt",slug:"ibm-ace-gotchas",tag:"ibm ace",excerpt:"Hard-won lessons from ACE that aren't in the docs — message flows, ESQL quirks, and deployment traps.",content:`IBM ACE documentation is thorough. IBM ACE reality is a different thing.
+
+This is a list of gotchas I've hit, watched teammates hit, or found buried in a Stack Overflow thread from 2017 with three upvotes.
+
+**ESQL SET doesn't create the node if the path doesn't exist**
+
+You write \`SET OutputRoot.JSON.Data.customer.id = InputRoot.JSON.Data.id;\` and wonder why the output is missing the field. If any node in that path doesn't exist yet, SET silently does nothing. You need to CREATE the path first.
+
+**Propagate in a Compute node doesn't exit**
+
+Calling \`PROPAGATE TO TERMINAL 'out'\` continues execution of the ESQL function — it doesn't exit. If you have logic after the PROPAGATE, it still runs. Always add \`RETURN;\` after PROPAGATE.
+
+**LocalEnvironment is not cleared between messages**
+
+The LocalEnvironment tree persists across the message flow execution within the same thread invocation. Always explicitly SET the paths you depend on, don't assume they're empty.
+
+**HTTP timeout defaults are not production-safe**
+
+The default HTTP request timeout in ACE's HTTPRequest node is 0 — meaning it waits forever. In production, a slow downstream API will hold your thread indefinitely. Always set explicit timeouts.
+
+The best ACE developers aren't the ones who've read the most docs. They're the ones who've broken the most things and kept notes.`,date:"2025-07-03",readTime:"10",coverImage:null,published:true},
+  ],
+  topics:[
+    {id:1,icon:"⚡",name:"API Integration",desc:"IBM ACE, REST, SOAP patterns"},
+    {id:2,icon:"🔁",name:"Event-Driven Systems",desc:"MQ, async flows, message choreography"},
+    {id:3,icon:"🧩",name:"Middleware & System Design",desc:"Flows that survive production"},
+    {id:4,icon:"🔍",name:"Debugging Production",desc:"Real incidents, real root causes"},
+    {id:5,icon:"📐",name:"Patterns & Anti-Patterns",desc:"What to build — and what to avoid"},
+  ],
+  siteConfig:{accent:"#e8ff47",tagline2:"Real-world lessons from building and debugging enterprise systems."}
+};
+
+function loadData(){
+  try{const s=localStorage.getItem("hasnain_site");return s?JSON.parse(s):DEFAULT_DATA;}
+  catch{return DEFAULT_DATA;}
+}
+function saveData(d){try{localStorage.setItem("hasnain_site",JSON.stringify(d));}catch{}}
+
+const css={
+  page:{background:"var(--bg)",minHeight:"100vh",fontFamily:"var(--sans)"},
+  nav:{background:"rgba(8,8,8,.94)",backdropFilter:"blur(12px)",borderBottom:"0.5px solid var(--bdr)",padding:"0 24px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,position:"sticky",top:0,zIndex:1000},
+  logo:{fontFamily:"var(--serif)",fontSize:20,color:"var(--txt)",fontStyle:"italic"},
+  logoAccent:{color:"var(--acc)"},
+  wrap:{maxWidth:860,margin:"0 auto",padding:"0 24px"},
+  section:{padding:"80px 0 72px",borderBottom:"0.5px solid var(--bdr)"},
+  tag:{display:"inline-block",background:"var(--bg4)",border:"0.5px solid var(--bdr2)",borderRadius:4,padding:"2px 9px",fontSize:11,color:"var(--acc)",letterSpacing:.3},
+  btn:{display:"inline-flex",alignItems:"center",gap:7,padding:"10px 18px",borderRadius:"var(--r)",fontSize:13,fontWeight:500,cursor:"pointer",transition:"all .15s",border:"0.5px solid",background:"transparent",fontFamily:"var(--sans)"},
+  btnPrimary:{background:"var(--acc)",color:"#000",borderColor:"var(--acc)",fontWeight:600},
+  btnGhost:{color:"var(--txt2)",borderColor:"var(--bdr2)"},
+  input:{background:"var(--bg3)",border:"0.5px solid var(--bdr2)",borderRadius:"var(--r)",padding:"10px 14px",fontSize:14,color:"var(--txt)",width:"100%",outline:"none",fontFamily:"var(--sans)"},
+  textarea:{background:"var(--bg3)",border:"0.5px solid var(--bdr2)",borderRadius:"var(--r)",padding:"12px 14px",fontSize:14,color:"var(--txt)",width:"100%",outline:"none",resize:"vertical",fontFamily:"var(--sans)",lineHeight:1.7},
+  card:{background:"var(--bg2)",border:"0.5px solid var(--bdr)",borderRadius:"var(--r2)",padding:"20px 24px"},
+  label:{fontSize:11,letterSpacing:1.5,textTransform:"uppercase",color:"var(--txt3)",marginBottom:20,display:"block"},
+};
+
+function NavBar({page,setPage,adminMode,setAdminMode,data}){
+  const [open,setOpen]=useState(false);
+  return(
+    <nav style={css.nav}>
+      <div style={{display:"flex",alignItems:"center",gap:32}}>
+        <span style={css.logo} onClick={()=>setPage("home")} className="logo-click">
+          hasnain<span style={css.logoAccent}>.</span>
+        </span>
+        <div style={{display:"flex",gap:24}}>
+          {["home","blog","about"].map(p=>(
+            <span key={p} onClick={()=>setPage(p)} style={{fontSize:13,color:page===p?"var(--txt)":"var(--txt2)",cursor:"pointer",transition:"color .15s",textTransform:"capitalize"}}>{p}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:12}}>
+        <span onClick={()=>setAdminMode(!adminMode)} style={{fontSize:11,color:adminMode?"var(--acc)":"var(--txt3)",cursor:"pointer",fontFamily:"var(--mono)",padding:"5px 10px",border:`0.5px solid ${adminMode?"var(--acc)":"var(--bdr2)"}`,borderRadius:6,transition:"all .2s"}}>
+          {adminMode?"● EDITING":"EDIT"}
+        </span>
+      </div>
+    </nav>
+  );
+}
+
+function ImageUpload({value,onChange,label,aspect}){
+  const ref=useRef();
+  const handleFile=e=>{
+    const f=e.target.files[0];
+    if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>onChange(ev.target.result);
+    r.readAsDataURL(f);
+  };
+  return(
+    <div>
+      <div onClick={()=>ref.current.click()} style={{border:"0.5px dashed var(--bdr2)",borderRadius:"var(--r)",padding:value?0:40,cursor:"pointer",textAlign:"center",overflow:"hidden",background:"var(--bg3)",transition:"border-color .2s",minHeight:value?0:100,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        {value
+          ?<img src={value} style={{width:"100%",height:aspect||200,objectFit:"cover",display:"block"}} alt="upload"/>
+          :<div style={{color:"var(--txt3)",fontSize:13}}>
+            <div style={{fontSize:24,marginBottom:8}}>+</div>
+            <div>{label||"Click to upload image"}</div>
+            <div style={{fontSize:11,marginTop:4,color:"var(--txt3)"}}>PNG, JPG, GIF, WebP</div>
+          </div>
+        }
+      </div>
+      {value&&<button onClick={()=>onChange(null)} style={{...css.btn,marginTop:6,fontSize:11,padding:"4px 10px",color:"var(--txt3)",borderColor:"var(--bdr2)"}}>Remove</button>}
+      <input ref={ref} type="file" accept="image/*" onChange={handleFile} style={{display:"none"}}/>
+    </div>
+  );
+}
+
+function InlineEdit({value,onChange,tag:Tag="span",style,multiline}){
+  const [editing,setEditing]=useState(false);
+  const [val,setVal]=useState(value);
+  const ref=useRef();
+  useEffect(()=>setVal(value),[value]);
+  const commit=()=>{setEditing(false);onChange(val);};
+  if(editing){
+    return multiline
+      ?<textarea ref={ref} value={val} onChange={e=>setVal(e.target.value)} onBlur={commit} style={{...css.textarea,...style,minHeight:80}} autoFocus/>
+      :<input ref={ref} value={val} onChange={e=>setVal(e.target.value)} onBlur={commit} onKeyDown={e=>e.key==="Enter"&&commit()} style={{...css.input,...style}} autoFocus/>;
+  }
+  return<Tag onClick={()=>setEditing(true)} style={{...style,cursor:"text",outline:"1px dashed transparent",transition:"outline .2s"}} className="inline-edit">{value||<span style={{color:"var(--txt3)"}}>Click to edit…</span>}</Tag>;
+}
+
+function MarkdownRender({content}){
+  const html=content
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>")
+    .replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/^(\d+)\.\s(.+)$/gm,"<li>$2</li>")
+    .replace(/(<li>.*<\/li>\n?)+/g,"<ol>$&</ol>")
+    .replace(/^-\s(.+)$/gm,"<li>$1</li>")
+    .replace(/(<li>.*<\/li>\n?)+/g,m=>m.includes("<ol>")?m:"<ul>"+m+"</ul>")
+    .split(/\n\n+/)
+    .map(p=>p.startsWith("<")?p:`<p>${p.replace(/\n/g,"<br/>")}</p>`)
+    .join("\n");
+  return<div className="prose" dangerouslySetInnerHTML={{__html:html}}/>;
+}
+
+function HomePage({data,setData,adminMode,setPage,setCurrentPost}){
+  const {profile,posts,topics}=data;
+  const pub=posts.filter(p=>p.published);
+
+  const updateProfile=field=>val=>{
+    const nd={...data,profile:{...profile,[field]:val}};
+    setData(nd);saveData(nd);
+  };
+
+  return(
+    <div>
+      <style>{`
+        .inline-edit:hover{outline-color:rgba(232,255,71,.3)!important;border-radius:3px}
+        .post-row:hover{background:var(--bg3)!important}
+        .post-row:hover .arrow{transform:translateX(4px);color:var(--acc)!important}
+        .topic-c:hover{border-color:var(--acc)!important}
+        .logo-click{cursor:pointer}
+        .prose p{color:#ccc;margin-bottom:16px;line-height:1.8;font-size:15px}
+        .prose strong{color:#efefef;font-weight:500}
+        .prose em{color:#aaa}
+        .prose code{font-family:var(--mono);font-size:13px;background:var(--bg4);padding:2px 6px;border-radius:4px;color:var(--acc)}
+        .prose ol,.prose ul{color:#ccc;padding-left:20px;margin-bottom:16px}
+        .prose li{margin-bottom:6px;line-height:1.75}
+        .admin-add{opacity:.4;transition:opacity .2s;cursor:pointer}
+        .admin-add:hover{opacity:1}
+        .nav-link-hover:hover{color:var(--txt)!important}
+      `}</style>
+
+      <section style={{...css.section,padding:"100px 0 88px"}}>
+        <div style={css.wrap}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"var(--bg3)",border:"0.5px solid var(--bdr2)",borderRadius:20,padding:"5px 14px",fontSize:12,color:"var(--txt2)",marginBottom:32,letterSpacing:.3}}>
+            <span style={{width:6,height:6,borderRadius:"50%",background:"var(--acc)",display:"inline-block",animation:"pulse 2s infinite"}}/>
+            <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}`}</style>
+            Integration Engineer · IBM ACE · Enterprise Systems
+          </div>
+
+          <div style={{marginBottom:20}}>
+            {adminMode
+              ?<div>
+                <input value={profile.tagline} onChange={e=>{const nd={...data,profile:{...profile,tagline:e.target.value}};setData(nd);saveData(nd);}} style={{...css.input,fontSize:"clamp(26px,4vw,46px)",fontFamily:"var(--serif)",fontStyle:"italic",fontWeight:400,letterSpacing:"-1px",lineHeight:1.15,height:"auto",padding:"4px 8px",marginBottom:4}} placeholder="Your headline"/>
+              </div>
+              :<h1 style={{fontFamily:"var(--serif)",fontSize:"clamp(26px,4vw,46px)",fontWeight:400,letterSpacing:"-1px",lineHeight:1.15,fontStyle:"italic"}}>
+                Hasnain <span style={{color:"var(--acc)"}}>{profile.tagline}</span>
+              </h1>
+            }
+          </div>
+
+          {adminMode
+            ?<input value={data.siteConfig.tagline2} onChange={e=>{const nd={...data,siteConfig:{...data.siteConfig,tagline2:e.target.value}};setData(nd);saveData(nd);}} style={{...css.input,fontSize:17,color:"var(--txt2)",marginBottom:8}} placeholder="Subtitle"/>
+            :<p style={{fontSize:17,color:"var(--txt2)",marginBottom:8}}>{data.siteConfig.tagline2}</p>
+          }
+
+          <div style={{display:"flex",gap:12,marginTop:36,flexWrap:"wrap"}}>
+            <button onClick={()=>setPage("blog")} style={{...css.btn,...css.btnPrimary}}>Read Blog</button>
+            <button onClick={()=>setPage("about")} style={{...css.btn,...css.btnGhost}}>About Me</button>
+          </div>
+        </div>
+      </section>
+
+      <section style={css.section}>
+        <div style={css.wrap}>
+          <span style={css.label}>What this is</span>
+          <div style={{background:"var(--bg3)",border:"0.5px solid var(--bdr)",borderLeft:"2px solid var(--acc)",borderRadius:"0 var(--r2) var(--r2) 0",padding:"24px 28px"}}>
+            {adminMode
+              ?<textarea value={profile.bio} onChange={e=>{const nd={...data,profile:{...profile,bio:e.target.value}};setData(nd);saveData(nd);}} style={{...css.textarea,fontSize:16,minHeight:80}} placeholder="Your bio/tagline"/>
+              :<p style={{fontSize:16,color:"var(--txt2)",lineHeight:1.85,fontStyle:"italic"}}>{profile.bio}</p>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section style={css.section}>
+        <div style={css.wrap}>
+          <span style={css.label}>Topics & expertise</span>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
+            {topics.map((t,i)=>(
+              <div key={t.id} className="topic-c" style={{background:"var(--bg2)",border:"0.5px solid var(--bdr)",borderRadius:"var(--r2)",padding:20,transition:"border-color .2s"}}>
+                {adminMode
+                  ?<div>
+                    <input value={t.icon} onChange={e=>{const nt=[...topics];nt[i]={...t,icon:e.target.value};const nd={...data,topics:nt};setData(nd);saveData(nd);}} style={{...css.input,width:60,marginBottom:8,textAlign:"center",fontSize:20}}/>
+                    <input value={t.name} onChange={e=>{const nt=[...topics];nt[i]={...t,name:e.target.value};const nd={...data,topics:nt};setData(nd);saveData(nd);}} style={{...css.input,marginBottom:6,fontSize:14,fontWeight:500}}/>
+                    <input value={t.desc} onChange={e=>{const nt=[...topics];nt[i]={...t,desc:e.target.value};const nd={...data,topics:nt};setData(nd);saveData(nd);}} style={{...css.input,fontSize:12}}/>
+                    <button onClick={()=>{const nt=topics.filter((_,j)=>j!==i);const nd={...data,topics:nt};setData(nd);saveData(nd);}} style={{...css.btn,marginTop:8,fontSize:11,padding:"3px 8px",color:"#ef4444",borderColor:"#ef4444"}}>Remove</button>
+                  </div>
+                  :<div>
+                    <span style={{fontSize:20,marginBottom:12,display:"block"}}>{t.icon}</span>
+                    <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>{t.name}</div>
+                    <div style={{fontSize:12,color:"var(--txt3)"}}>{t.desc}</div>
+                  </div>
+                }
+              </div>
+            ))}
+            {adminMode&&(
+              <div onClick={()=>{const nd={...data,topics:[...topics,{id:Date.now(),icon:"🔧",name:"New Topic",desc:"Description"}]};setData(nd);saveData(nd);}} className="admin-add" style={{background:"var(--bg2)",border:"0.5px dashed var(--bdr2)",borderRadius:"var(--r2)",padding:20,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,minHeight:120}}>
+                <span style={{fontSize:24,color:"var(--txt3)"}}>+</span>
+                <span style={{fontSize:12,color:"var(--txt3)"}}>Add topic</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section style={css.section}>
+        <div style={css.wrap}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+            <span style={css.label}>Featured posts</span>
+            {adminMode&&<button onClick={()=>{setPage("newpost")}} style={{...css.btn,...css.btnPrimary,fontSize:12,padding:"6px 14px"}}>+ New Post</button>}
+          </div>
+          <div style={{border:"0.5px solid var(--bdr)",borderRadius:"var(--r2)",overflow:"hidden"}}>
+            {pub.slice(0,5).map((p,i)=>(
+              <div key={p.id} className="post-row" onClick={()=>{setCurrentPost(p);setPage("post");}} style={{display:"flex",alignItems:"flex-start",gap:20,padding:24,background:"var(--bg2)",borderBottom:i<pub.length-1?"0.5px solid var(--bdr)":"none",cursor:"pointer",transition:"background .18s"}}>
+                {p.coverImage&&<img src={p.coverImage} style={{width:80,height:56,objectFit:"cover",borderRadius:6,flexShrink:0}} alt=""/>}
+                <div style={{flex:1}}>
+                  <span style={{...css.tag,marginBottom:8}}>{p.tag}</span>
+                  <div style={{fontSize:15,fontWeight:500,color:"var(--txt)",marginBottom:4,lineHeight:1.4}}>{p.title}</div>
+                  <div style={{fontSize:13,color:"var(--txt3)",lineHeight:1.55}}>{p.excerpt}</div>
+                  <div style={{fontSize:11,color:"var(--txt3)",marginTop:8,fontFamily:"var(--mono)"}}>{p.date} · {p.readTime} min read</div>
+                </div>
+                <span className="arrow" style={{color:"var(--txt3)",fontSize:18,alignSelf:"center",transition:"transform .2s, color .2s"}}>→</span>
+              </div>
+            ))}
+            {pub.length===0&&<div style={{padding:40,textAlign:"center",color:"var(--txt3)",fontSize:14}}>No published posts yet.{adminMode?" Click '+ New Post' to create one.":""}</div>}
+          </div>
+          {pub.length>5&&<button onClick={()=>setPage("blog")} style={{...css.btn,...css.btnGhost,marginTop:16}}>View all posts →</button>}
+        </div>
+      </section>
+
+      <section style={{...css.section,borderBottom:"none",padding:"72px 0 64px"}}>
+        <div style={css.wrap}>
+          <span style={css.label}>About</span>
+          <div style={{...css.card,display:"flex",gap:24,alignItems:"flex-start"}}>
+            <div style={{flexShrink:0}}>
+              {adminMode
+                ?<ImageUpload value={profile.avatar} onChange={updateProfile("avatar")} label="Photo" aspect={64}/>
+                :<div style={{width:52,height:52,borderRadius:"50%",background:profile.avatar?"transparent":"var(--bg4)",border:"0.5px solid var(--bdr2)",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  {profile.avatar?<img src={profile.avatar} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:20,fontWeight:600,color:"var(--acc)"}}>H</span>}
+                </div>
+              }
+            </div>
+            <div style={{flex:1}}>
+              <h3 style={{fontSize:17,fontWeight:500,marginBottom:8}}>{profile.name}</h3>
+              <p style={{fontSize:14,color:"var(--txt2)",lineHeight:1.8}}>{profile.bio}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function BlogPage({data,setData,adminMode,setPage,setCurrentPost}){
+  const [filter,setFilter]=useState("all");
+  const tags=["all",...new Set(data.posts.map(p=>p.tag))];
+  const filtered=data.posts.filter(p=>(adminMode||p.published)&&(filter==="all"||p.tag===filter));
+
+  return(
+    <div style={{...css.wrap,paddingTop:64,paddingBottom:96}}>
+      <style>{`.post-card:hover{border-color:var(--acc)!important} .post-card:hover .arrow{transform:translateX(4px);color:var(--acc)!important}`}</style>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:40,flexWrap:"wrap",gap:16}}>
+        <div>
+          <h1 style={{fontFamily:"var(--serif)",fontSize:36,fontWeight:400,fontStyle:"italic",letterSpacing:"-0.5px",marginBottom:6}}>Writing</h1>
+          <p style={{fontSize:14,color:"var(--txt3)"}}>Notes from the trenches. {data.posts.filter(p=>p.published).length} posts published.</p>
+        </div>
+        {adminMode&&<button onClick={()=>setPage("newpost")} style={{...css.btn,...css.btnPrimary}}>+ New Post</button>}
+      </div>
+      <div style={{display:"flex",gap:8,marginBottom:32,flexWrap:"wrap"}}>
+        {tags.map(t=>(
+          <button key={t} onClick={()=>setFilter(t)} style={{...css.btn,fontSize:12,padding:"5px 12px",background:filter===t?"var(--acc)":"transparent",color:filter===t?"#000":"var(--txt2)",borderColor:filter===t?"var(--acc)":"var(--bdr2)",textTransform:t==="all"?"capitalize":t}}>
+            {t}
+          </button>
+        ))}
+      </div>
+      <div style={{display:"grid",gap:10}}>
+        {filtered.map(p=>(
+          <div key={p.id} className="post-card" onClick={()=>{setCurrentPost(p);setPage("post");}} style={{background:"var(--bg2)",border:"0.5px solid var(--bdr)",borderRadius:"var(--r2)",padding:24,cursor:"pointer",transition:"border-color .18s",display:"flex",gap:20,alignItems:"flex-start"}}>
+            {p.coverImage&&<img src={p.coverImage} style={{width:96,height:64,objectFit:"cover",borderRadius:"var(--r)",flexShrink:0}} alt=""/>}
+            <div style={{flex:1}}>
+              <div style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
+                <span style={css.tag}>{p.tag}</span>
+                {adminMode&&!p.published&&<span style={{...css.tag,color:"#f59e0b",borderColor:"#f59e0b"}}>draft</span>}
+                <span style={{fontSize:11,color:"var(--txt3)",fontFamily:"var(--mono)",marginLeft:"auto"}}>{p.date} · {p.readTime} min</span>
+              </div>
+              <div style={{fontSize:16,fontWeight:500,marginBottom:6,lineHeight:1.4}}>{p.title}</div>
+              <div style={{fontSize:13,color:"var(--txt3)",lineHeight:1.6}}>{p.excerpt}</div>
+            </div>
+            {adminMode&&(
+              <div style={{display:"flex",gap:6,flexShrink:0}} onClick={e=>e.stopPropagation()}>
+                <button onClick={()=>{setCurrentPost(p);setPage("editpost");}} style={{...css.btn,fontSize:11,padding:"4px 10px",borderColor:"var(--bdr2)",color:"var(--txt2)"}}>Edit</button>
+                <button onClick={()=>{const nd={...data,posts:data.posts.filter(pp=>pp.id!==p.id)};setData(nd);saveData(nd);}} style={{...css.btn,fontSize:11,padding:"4px 10px",borderColor:"#ef4444",color:"#ef4444"}}>Delete</button>
+              </div>
+            )}
+            <span className="arrow" style={{color:"var(--txt3)",fontSize:18,alignSelf:"center",transition:"all .2s",flexShrink:0}}>→</span>
+          </div>
+        ))}
+        {filtered.length===0&&<div style={{padding:60,textAlign:"center",color:"var(--txt3)",fontSize:14}}>No posts yet.</div>}
+      </div>
+    </div>
+  );
+}
+
+function PostPage({post,setPage,data,setData,adminMode}){
+  if(!post)return null;
+  return(
+    <div style={{maxWidth:720,margin:"0 auto",padding:"64px 24px 96px"}}>
+      <style>{`.prose p{color:#ccc;margin-bottom:18px;line-height:1.85;font-size:16px} .prose strong{color:#efefef;font-weight:500} .prose em{color:#aaa} .prose code{font-family:var(--mono);font-size:13px;background:var(--bg4);padding:2px 6px;border-radius:4px;color:var(--acc)} .prose ol,.prose ul{color:#ccc;padding-left:22px;margin-bottom:18px} .prose li{margin-bottom:8px;line-height:1.8}`}</style>
+      <button onClick={()=>setPage("blog")} style={{...css.btn,...css.btnGhost,marginBottom:40,fontSize:13}}>← Back</button>
+      {post.coverImage&&<img src={post.coverImage} style={{width:"100%",height:280,objectFit:"cover",borderRadius:"var(--r2)",marginBottom:40}} alt=""/>}
+      <div style={{marginBottom:24}}>
+        <span style={css.tag}>{post.tag}</span>
+        <span style={{fontSize:12,color:"var(--txt3)",fontFamily:"var(--mono)",marginLeft:12}}>{post.date} · {post.readTime} min read</span>
+      </div>
+      <h1 style={{fontFamily:"var(--serif)",fontSize:"clamp(26px,4vw,40px)",fontWeight:400,fontStyle:"italic",letterSpacing:"-.6px",lineHeight:1.2,marginBottom:20}}>{post.title}</h1>
+      <p style={{fontSize:17,color:"var(--txt2)",lineHeight:1.75,marginBottom:48,paddingBottom:36,borderBottom:"0.5px solid var(--bdr)"}}>{post.excerpt}</p>
+      <MarkdownRender content={post.content}/>
+      {adminMode&&(
+        <div style={{marginTop:40,paddingTop:24,borderTop:"0.5px solid var(--bdr)",display:"flex",gap:10}}>
+          <button onClick={()=>setPage("editpost")} style={{...css.btn,...css.btnPrimary}}>Edit Post</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostEditor({data,setData,setPage,editPost,setCurrentPost}){
+  const blank={id:Date.now(),title:"",slug:"",tag:"",excerpt:"",content:"",date:new Date().toISOString().slice(0,10),readTime:"5",coverImage:null,published:false};
+  const [post,setPost]=useState(editPost||blank);
+  const [saving,setSaving]=useState(false);
+
+  const save=(pub)=>{
+    setSaving(true);
+    const p={...post,published:pub??post.published};
+    let posts;
+    if(editPost){
+      posts=data.posts.map(pp=>pp.id===p.id?p:pp);
+    }else{
+      posts=[...data.posts,p];
+    }
+    const nd={...data,posts};
+    setData(nd);saveData(nd);
+    setCurrentPost(p);
+    setTimeout(()=>{setSaving(false);setPage("post");},200);
+  };
+
+  const tags=["incident report","ibm ace","integration","debugging","system design","esql","mq","devlog"];
+
+  return(
+    <div style={{maxWidth:800,margin:"0 auto",padding:"48px 24px 96px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:40}}>
+        <button onClick={()=>setPage("blog")} style={{...css.btn,...css.btnGhost}}>← Cancel</button>
+        <h1 style={{fontSize:20,fontWeight:500,flex:1}}>{editPost?"Edit Post":"New Post"}</h1>
+        <button onClick={()=>save(false)} style={{...css.btn,...css.btnGhost,fontSize:13}}>Save Draft</button>
+        <button onClick={()=>save(true)} style={{...css.btn,...css.btnPrimary,fontSize:13}}>{saving?"Saving…":"Publish"}</button>
+      </div>
+
+      <div style={{display:"grid",gap:20}}>
+        <div>
+          <label style={{...css.label,marginBottom:8}}>Cover Image</label>
+          <ImageUpload value={post.coverImage} onChange={v=>setPost({...post,coverImage:v})} label="Upload cover image" aspect={200}/>
+        </div>
+
+        <div>
+          <label style={{...css.label,marginBottom:8}}>Title</label>
+          <input value={post.title} onChange={e=>setPost({...post,title:e.target.value,slug:e.target.value.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")})} style={{...css.input,fontSize:20,fontFamily:"var(--serif)",fontStyle:"italic"}} placeholder="Post title…"/>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+          <div>
+            <label style={{...css.label,marginBottom:8}}>Tag / Category</label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+              {tags.map(t=>(
+                <span key={t} onClick={()=>setPost({...post,tag:t})} style={{...css.tag,cursor:"pointer",background:post.tag===t?"var(--acc)":"var(--bg4)",color:post.tag===t?"#000":"var(--acc)"}}>
+                  {t}
+                </span>
+              ))}
+            </div>
+            <input value={post.tag} onChange={e=>setPost({...post,tag:e.target.value})} style={css.input} placeholder="Or type custom…"/>
+          </div>
+          <div>
+            <label style={{...css.label,marginBottom:8}}>Read Time (min)</label>
+            <input type="number" value={post.readTime} onChange={e=>setPost({...post,readTime:e.target.value})} style={css.input} min="1" max="60"/>
+            <label style={{...css.label,marginTop:12,marginBottom:8}}>Date</label>
+            <input type="date" value={post.date} onChange={e=>setPost({...post,date:e.target.value})} style={css.input}/>
+          </div>
+        </div>
+
+        <div>
+          <label style={{...css.label,marginBottom:8}}>Excerpt <span style={{color:"var(--txt3)",textTransform:"none",letterSpacing:0,fontSize:12}}>— shown in post cards</span></label>
+          <textarea value={post.excerpt} onChange={e=>setPost({...post,excerpt:e.target.value})} style={{...css.textarea,minHeight:60}} placeholder="One or two sentence summary…"/>
+        </div>
+
+        <div>
+          <label style={{...css.label,marginBottom:8}}>Content <span style={{color:"var(--txt3)",textTransform:"none",letterSpacing:0,fontSize:12}}>— supports **bold**, *italic*, \`code\`, and numbered/bullet lists</span></label>
+          <textarea value={post.content} onChange={e=>setPost({...post,content:e.target.value})} style={{...css.textarea,minHeight:400,fontFamily:"var(--mono)",fontSize:13}} placeholder="Write your post here…"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AboutPage({data,setData,adminMode}){
+  const {profile}=data;
+  const updateProfile=field=>val=>{
+    const nd={...data,profile:{...profile,[field]:val}};
+    setData(nd);saveData(nd);
+  };
+
+  return(
+    <div style={{maxWidth:720,margin:"0 auto",padding:"64px 24px 96px"}}>
+      <h1 style={{fontFamily:"var(--serif)",fontSize:36,fontWeight:400,fontStyle:"italic",letterSpacing:"-.5px",marginBottom:48}}>About</h1>
+
+      <div style={{...css.card,display:"flex",gap:28,marginBottom:40,alignItems:"flex-start"}}>
+        <div style={{flexShrink:0}}>
+          {adminMode
+            ?<div style={{width:100}}><ImageUpload value={profile.avatar} onChange={updateProfile("avatar")} label="Photo" aspect={100}/></div>
+            :<div style={{width:72,height:72,borderRadius:"50%",background:profile.avatar?"transparent":"var(--bg4)",border:"0.5px solid var(--bdr2)",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {profile.avatar?<img src={profile.avatar} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:28,fontWeight:600,color:"var(--acc)"}}>H</span>}
+            </div>
+          }
+        </div>
+        <div style={{flex:1}}>
+          {adminMode
+            ?<input value={profile.name} onChange={e=>updateProfile("name")(e.target.value)} style={{...css.input,fontSize:22,fontFamily:"var(--serif)",fontStyle:"italic",marginBottom:8}}/>
+            :<h2 style={{fontFamily:"var(--serif)",fontSize:22,fontWeight:400,fontStyle:"italic",marginBottom:6}}>{profile.name}</h2>
+          }
+          {adminMode
+            ?<input value={profile.title} onChange={e=>updateProfile("title")(e.target.value)} style={{...css.input,fontSize:14,color:"var(--txt2)",marginBottom:8}} placeholder="Job title"/>
+            :<p style={{fontSize:14,color:"var(--txt2)",marginBottom:0}}>{profile.title}</p>
+          }
+        </div>
+      </div>
+
+      <div style={{marginBottom:40}}>
+        <span style={css.label}>Background</span>
+        {adminMode
+          ?<textarea value={profile.bio} onChange={e=>updateProfile("bio")(e.target.value)} style={{...css.textarea,minHeight:120}} placeholder="Write about yourself…"/>
+          :<p style={{fontSize:15,color:"var(--txt2)",lineHeight:1.85}}>{profile.bio}</p>
+        }
+      </div>
+
+      <div style={{marginBottom:40}}>
+        <span style={css.label}>Skills & tags</span>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+          {profile.tags.map((t,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
+              <span style={css.tag}>{t}</span>
+              {adminMode&&<span onClick={()=>{const nt=profile.tags.filter((_,j)=>j!==i);updateProfile("tags")(nt);}} style={{color:"#ef4444",cursor:"pointer",fontSize:14}}>×</span>}
+            </div>
+          ))}
+          {adminMode&&(
+            <input onKeyDown={e=>{if((e.key==="Enter"||e.key===",")&&e.target.value.trim()){updateProfile("tags")([...profile.tags,e.target.value.trim()]);e.target.value="";}}} style={{...css.input,width:140,padding:"3px 8px",fontSize:12}} placeholder="Add tag, Enter"/>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <span style={css.label}>Contact</span>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          {adminMode
+            ?<>
+              <div>
+                <div style={{fontSize:12,color:"var(--txt3)",marginBottom:6}}>Email</div>
+                <input value={profile.email} onChange={e=>updateProfile("email")(e.target.value)} style={css.input} placeholder="your@email.com"/>
+              </div>
+              <div>
+                <div style={{fontSize:12,color:"var(--txt3)",marginBottom:6}}>LinkedIn</div>
+                <input value={profile.linkedin} onChange={e=>updateProfile("linkedin")(e.target.value)} style={css.input} placeholder="linkedin.com/in/username"/>
+              </div>
+            </>
+            :<>
+              {profile.email&&<div style={{...css.card,fontSize:14}}><div style={{fontSize:11,color:"var(--txt3)",marginBottom:4}}>EMAIL</div><a href={`mailto:${profile.email}`} style={{color:"var(--acc)"}}>{profile.email}</a></div>}
+              {profile.linkedin&&<div style={{...css.card,fontSize:14}}><div style={{fontSize:11,color:"var(--txt3)",marginBottom:4}}>LINKEDIN</div><a href={`https://${profile.linkedin}`} target="_blank" style={{color:"var(--acc)"}}>{profile.linkedin}</a></div>}
+            </>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [data,setData]=useState(loadData);
+  const [page,setPage]=useState("home");
+  const [currentPost,setCurrentPost]=useState(null);
+  const [adminMode,setAdminMode]=useState(false);
+
+  useEffect(()=>{window.scrollTo(0,0);},[page]);
+
+  const pages={
+    home:<HomePage data={data} setData={setData} adminMode={adminMode} setPage={setPage} setCurrentPost={setCurrentPost}/>,
+    blog:<BlogPage data={data} setData={setData} adminMode={adminMode} setPage={setPage} setCurrentPost={setCurrentPost}/>,
+    post:<PostPage post={currentPost} setPage={setPage} data={data} setData={setData} adminMode={adminMode}/>,
+    about:<AboutPage data={data} setData={setData} adminMode={adminMode}/>,
+    newpost:<PostEditor data={data} setData={setData} setPage={setPage} editPost={null} setCurrentPost={setCurrentPost}/>,
+    editpost:<PostEditor data={data} setData={setData} setPage={setPage} editPost={currentPost} setCurrentPost={setCurrentPost}/>,
+  };
+
+  return(
+    <div style={css.page}>
+      <NavBar page={page} setPage={setPage} adminMode={adminMode} setAdminMode={setAdminMode} data={data}/>
+      {pages[page]||pages.home}
+      <footer style={{borderTop:"0.5px solid var(--bdr)",padding:"24px",textAlign:"center",fontSize:12,color:"var(--txt3)",fontFamily:"var(--mono)"}}>
+        Built by Hasnain · <em style={{fontFamily:"var(--sans)"}}>Powered by controlled chaos</em> · © {new Date().getFullYear()}
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
